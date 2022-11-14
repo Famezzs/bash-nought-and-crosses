@@ -11,7 +11,8 @@ computerSignature="o"
 blankSignature=" "
 
 announceRound() {
-	echo -en "\n\nRound #$((movesPerformed/2+1))\n\n"
+	clear
+	echo -en "Round #$((movesPerformed/2+1))\n\n"
 }
 
 announceWinner() {
@@ -19,6 +20,15 @@ announceWinner() {
 	echo "$1 is the winner!"
 	printBoard
 	isGameOver=true
+	exit 0
+}
+
+announceDraw() {
+	clear
+	echo -en "\nIt's a draw!\n\n"
+	printBoard
+	isGameOver=true
+	exit 0
 }
 
 printBoard() {
@@ -87,8 +97,7 @@ checkWinCondition() {
 	[[ "${gameBoard[2,${moveColumn}]}" == "$1" ]] &&
 	announceWinner "$2" && return
 
-	if 
-	[[ "${moveRow}" == "${moveColumn}" ]] ||
+	if [[ "${moveRow}" == "${moveColumn}" ]] ||
 	[[ "${moveRow}${moveColumn}" == "02" ]] ||
 	[[ "${moveRow}${moveColumn}" == "20" ]]
 	then
@@ -113,8 +122,7 @@ checkWinCondition() {
 checkDrawCondition() {
 	if [ "${movesPerformed}" -ge 9 ]
 	then
-		echo -en "\nIt's a draw!\n\n"
-		isGameOver=true
+		announceDraw
 	fi
 }
 
@@ -156,6 +164,11 @@ convertMovePositionToIndexes() {
 			moveRow=2
 			moveColumn=2
 			;;
+
+		*)
+			moveRow=-1
+			moveColumn=-1
+			;;
 	esac
 }
 
@@ -177,8 +190,6 @@ startPlayerTurn() {
 	done
 
 	finishMove "${playerSignature}" "Player"
-	[[ "${isGameOver}" == "false" ]] && 
-	checkDrawCondition
 }
 
 startComputerTurn() {
@@ -192,33 +203,24 @@ startComputerTurn() {
 	done
 
 	finishMove "${computerSignature}" "Computer"
-	[[ "${isGameOver}" == "false" ]] && 
-	printBoard &&
-	sleep 2s
 }
 
 finishMove() {
-	checkWinCondition "$1" "$2"
-	movePerformedSuccessfully=false
 	((movesPerformed++))
-}
-
-finishRound() {
+	checkWinCondition "$1" "$2"
 	checkDrawCondition
-	((round++))
+	movePerformedSuccessfully=false
+	printBoard
+	sleep 2s
 }
 
 main() {
 	initializeBoard
-
 	until [ $isGameOver = true ]
 	do
-		clear
 		announceRound
 		startPlayerTurn
-		[[ "${isGameOver}" == "false" ]] &&
-		startComputerTurn &&
-		finishRound
+		startComputerTurn
 	done
 }
 
